@@ -34,10 +34,9 @@ Bun.serve({
       const amount = Number(body?.amount)
       if (!correlationId || !Number.isFinite(amount) || amount <= 0) return bad('invalid fields')
 
-      // idempotency (1h)
       const key = `cid:${correlationId}`
       const set = await redis.set(key, '1', 'NX', 'EX', 3600)
-      if (set === null) return ok() // already processed / enqueued
+      if (set === null) return ok()
 
       const auth = req.headers.get('authorization') || `Bearer ${process.env.TOKEN ?? ''}`
       await enqueue({ correlationId, amount, auth, enqueuedAt: Date.now(), tries: 0 })

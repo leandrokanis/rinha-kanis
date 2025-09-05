@@ -14,16 +14,13 @@ console.log('Worker started');
       }
       catch (err) {
         if (tries < 5) {
-          // re-enqueue with incremented tries (simple retry)
           job.tries = tries + 1
           await new Promise(r => setTimeout(r, 20))
-          // naive backoff, push front to try sooner
           await import('./redis').then(({ enqueue }) => enqueue(job))
         }
       }
     }
     catch (err) {
-      // log and keep looping
       console.error('worker error', err)
     }
   }

@@ -15,7 +15,7 @@ export async function enqueue(job: object) {
 export async function dequeue(timeoutSec = 1): Promise<any | null> {
   const res = await redis.brpop(QUEUE_KEY, timeoutSec)
   if (!res) return null
-  const [, payload] = res // [key, value]
+  const [, payload] = res
   return JSON.parse(payload)
 }
 

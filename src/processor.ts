@@ -5,7 +5,6 @@ import { addSample } from './counters'
 const DEFAULT_URL = process.env.PROC_DEFAULT_URL ?? 'http://localhost:8001'
 const FALLBACK_URL = process.env.PROC_FALLBACK_URL ?? 'http://localhost:8002'
 
-// Circuit-breaker parameters
 const TIMEOUT_MS = Number(process.env.PROC_TIMEOUT_MS ?? 300)
 const FAIL_THRESHOLD = Number(process.env.CB_FAIL_THRESHOLD ?? 3)
 const OPEN_MS = Number(process.env.CB_OPEN_MS ?? 1000)
@@ -73,17 +72,15 @@ export async function processWithFallback(body: { correlationId: string, amount:
     const order: ProcName[] = (await isOpen('default')) ? ['fallback', 'default'] : ['default', 'fallback']
 
     for (const proc of order) {
-      if (await isOpen(proc)) continue // skip if open
+      if (await isOpen(proc)) continue
       try {
         await sendPayment(proc, body, authHeader)
         return
       }
       catch (_) {
-        // try next
       }
     }
 
-    // backoff exponential with jitter
     const backoff = Math.min(50 * 2 ** attempt, 400)
     await sleep(backoff + Math.floor(Math.random() * 50))
   }
